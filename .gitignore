@@ -3,4 +3,7 @@ XGMix
 .idea/
 venv/
 gen
-
+models/
+published_models/
+publish_data/
+*.gz
