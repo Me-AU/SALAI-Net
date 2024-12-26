@@ -7,3 +7,10 @@ models/
 published_models/
 publish_data/
 *.gz
+data/ref_panel_chr22.vcf
+data/ref_panel_map.tsv
+data/dataset_train.tsv
+data/dataset_test.tsv
+data/dataset_main.tsv
+data/ch_22_filtered.vcf
+data/1kmap.tsv
