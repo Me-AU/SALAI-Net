@@ -1,5 +1,6 @@
 import csv
 import random
+from typing import Set
 
 
 def compare_and_filter_tsv(input_tsv1, input_tsv2, output_tsv):
@@ -97,74 +98,67 @@ def stratified_split(input_tsv, train_tsv, test_tsv, ratio=0.8):
     print(f"Stratified Train and Test sets written to {train_tsv} and {test_tsv}")
 
 
-import csv
-
-def filter_vcf_by_samples(input_tsv, input_vcf, output_vcf):
+def filter_vcf_by_samples(input_tsv: str, input_vcf: str, output_vcf: str) -> None:
     """
-    Filters a VCF file based on a list of sample names provided in a TSV file. Only the samples
-    listed in the TSV file are included in the output VCF.
+    Filters a VCF file based on a list of sample names provided in a TSV file.
+    Uses buffered writing for improved I/O performance.
 
     Args:
-        input_tsv (str): Path to the input TSV file containing the sample names (first column).
+        input_tsv (str): Path to the input TSV file containing sample names.
         input_vcf (str): Path to the input VCF file to be filtered.
-        output_vcf (str): Path to the output VCF file containing only the selected samples.
-
-    Returns:
-        None. The function writes the filtered VCF to the specified output file.
-    
-    Example:
-        filter_vcf_by_samples('samples_to_include.tsv', 'input_data.vcf', 'filtered_data.vcf')
+        output_vcf (str): Path to the output VCF file.
     """
-    
-    # Read the sample names from the TSV file (first column)
+    # Read sample names into a set for O(1) lookups
     with open(input_tsv, 'r') as tsv_file:
-        reader = csv.reader(tsv_file, delimiter='\t')
-        samples_to_include = {row[0] for row in reader}
+        samples_to_include: Set[str] = {row[0] for row in csv.reader(tsv_file, delimiter='\t')}
     
-    # Open the input VCF and process the file
-    with open(input_vcf, 'r') as vcf_file, open(output_vcf, 'w') as out_vcf:
+    # Use a larger buffer size for writing (1MB)
+    buffer_size = 1024 * 1024  # 1MB buffer
+    
+    with open(input_vcf, 'r') as vcf_file, \
+         open(output_vcf, 'w', buffering=buffer_size) as out_vcf:
+        
+        sample_indices = []
         header_written = False
+        
         for line in vcf_file:
-            # Handle header lines (starting with '#')
             if line.startswith('#'):
                 if line.startswith('#CHROM'):
-
+                    # Process header line with sample names
                     header_fields = line.strip().split('\t')
-                    all_samples = header_fields[9:]  # Sample names start from index 9
-                    # Filter the header to include only selected samples
-                    filtered_samples = header_fields[:9] + [sample for sample in all_samples if sample in samples_to_include]
-                    out_vcf.write('\t'.join(filtered_samples) + '\n')
+                    all_samples = header_fields[9:]
+                    
+                    # Calculate indices of samples to keep (done once)
+                    sample_indices = [i for i, sample in enumerate(all_samples) 
+                                   if sample in samples_to_include]
+                    
+                    # Write filtered header
+                    filtered_header = (header_fields[:9] + 
+                                    [all_samples[i] for i in sample_indices])
+                    out_vcf.write('\t'.join(filtered_header) + '\n')
                 else:
-                    # For other header lines, just write them as-is
+                    # Write other header lines as-is
                     out_vcf.write(line)
                 continue
             
-            # Process data lines (not header lines)
-            fields = line.strip().split('\t')
-            sample_names = fields[9:] 
-            
-            # Filter the genotypes to include only those for the selected samples
-            filtered_genotypes = fields[:9]  # Keep the first 9 columns (standard INFO columns)
-            for i, sample in enumerate(sample_names):
-                if all_samples[i] in samples_to_include:
-                    filtered_genotypes.append(sample_names[i])
-
-            # Write the filtered SNP information to the output VCF
-            out_vcf.write('\t'.join(filtered_genotypes) + '\n')
+            # Process data lines using pre-calculated indices
+            fields = line.rstrip().split('\t')
+            filtered_line = (fields[:9] +  # Fixed columns
+                           [fields[i + 9] for i in sample_indices])  # Selected samples
+            out_vcf.write('\t'.join(filtered_line) + '\n')
 
     print(f"Filtered VCF file written to {output_vcf}")
-
 
 
 #Usage
 
 # get the samples which are not in the ref
-# compare_and_filter_tsv('1kmap.tsv', 'ref_panel_map.tsv', 'dataset_main.tsv')
-# # divide the samples into train and test set 
-# stratified_split('dataset_main.tsv', 'dataset_train.tsv', 'dataset_test.tsv', ratio=0.8)
-# #generate training vcf 
-# filter_vcf_by_samples('train.tsv', 'data\utils\ch_22_filtered.vcf', 'train.vcf')
-# #Generate test vcf 
-filter_vcf_by_samples('dataset_test.tsv','utils/ch_22_filtered.vcf', 'test.vcf')
+compare_and_filter_tsv('1kmap.tsv', 'test.tsv', 'test_tsv.tsv')
+# divide the samples into train and test set 
+stratified_split('test_tsv.tsv', 'train_tsv', 'test_tsv', ratio=0.8)
+#generate training vcf 
+filter_vcf_by_samples('train.tsv', 'data\utils\ch_22_filtered.vcf', 'train.vcf')
+#Generate test vcf 
+filter_vcf_by_samples('test.tsv','data\utils\ch_22_filtered.vcf', 'test.vcf')
 
 
