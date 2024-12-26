@@ -182,10 +182,9 @@ class BaseModel(nn.Module):
         return out_, max_indices_batch
 
 
-class AgnosticModel(nn.Module):
-
+class AgnosticModelWithXGB(nn.Module):
     def __init__(self, args):
-        super(AgnosticModel, self).__init__()
+        super(AgnosticModelWithXGB, self).__init__()
         if args.win_stride == -1:
             args.win_stride = args.win_size
         self.args = args
@@ -206,31 +205,48 @@ class AgnosticModel(nn.Module):
             print("No dropout")
             self.dropout = nn.Sequential()
 
-    def forward(self, input_mixed, ref_panel):
+        # Initialize the XGBoost classifier
+        self.xgb_classifier = XGBClassifier(
+            use_label_encoder=False, 
+            eval_metric="logloss",  # which loss?
 
+        )
+
+    def forward(self, input_mixed, ref_panel, train_xgb=False, labels=None):
         seq_len = input_mixed.shape[-1]
 
         out, max_indices = self.base_model(input_mixed, ref_panel)
 
         out = stack_ancestries(out).to(next(self.parameters()).device)
-
         out_basemodel = out
 
         out = self.dropout(out)
-
         out_smoother = out = self.smoother(out)
 
-        out = interpolate_and_pad(out, self.args.win_stride, seq_len)
+        # Permute dimensions to prepare logits for XGB (batch, sequence, classes)
+        logits = out.permute(0, 2, 1).cpu().detach().numpy()  # Shape: (batch_size, seq_len, num_classes)
 
-        out = out.permute(0, 2, 1)
+        # Flatten logits for training or prediction (batch_size * seq_len, num_classes)
+        flattened_logits = logits.reshape(-1, logits.shape[-1])
 
+        # Train XGBoost classifier if in training mode
+        if train_xgb and labels is not None:
+            flattened_labels = labels.cpu().numpy().reshape(-1)  # Flatten labels
+            self.xgb_classifier.fit(flattened_logits, flattened_labels)
+            print("XGBoost classifier trained.")
+
+        # XGB inference
+        xgb_predictions = self.xgb_classifier.predict(flattened_logits)
+        xgb_predictions = xgb_predictions.reshape(logits.shape[:2])  # Reshape back to (batch_size, seq_len)
+
+        # Prepare the output dictionary
         output = {
-            'predictions':out,
+            'predictions': xgb_predictions,  # XGB predictions
+            'raw_logits': logits,            # Logits before XGB
             'out_basemodel': out_basemodel,
             'out_smoother': out_smoother,
             'max_indices': max_indices
         }
-
         return output
 
 
