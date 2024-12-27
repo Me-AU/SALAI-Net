@@ -205,8 +205,11 @@ class AgnosticModel(nn.Module):
             print("No dropout")
             self.dropout = nn.Sequential()
 
-        # Temperature parameter (default value can be set or passed via args)
-        self.temperature = args.temperature if hasattr(args, 'temperature') else 1.0
+        # # Temperature parameter (default value can be set or passed via args)
+        # self.temperature = args.temperature if hasattr(args, 'temperature') else 1.0
+        
+        # Initialize learnable temperature parameter
+        self.temperature = nn.Parameter(torch.ones(1) * 1.0)
 
 
     def forward(self, input_mixed, ref_panel):
