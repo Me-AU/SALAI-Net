@@ -183,7 +183,6 @@ class BaseModel(nn.Module):
 
 
 class AgnosticModel(nn.Module):
-
     def __init__(self, args):
         super(AgnosticModel, self).__init__()
         if args.win_stride == -1:
@@ -206,33 +205,39 @@ class AgnosticModel(nn.Module):
             print("No dropout")
             self.dropout = nn.Sequential()
 
-    def forward(self, input_mixed, ref_panel):
+        # Temperature parameter (default value can be set or passed via args)
+        self.temperature = args.temperature if hasattr(args, 'temperature') else 1.0
 
+
+    def forward(self, input_mixed, ref_panel):
         seq_len = input_mixed.shape[-1]
 
+        # Base model forward pass
         out, max_indices = self.base_model(input_mixed, ref_panel)
 
+        # Stack ancestries for all references
         out = stack_ancestries(out).to(next(self.parameters()).device)
-
         out_basemodel = out
 
+        # Apply dropout and smoothing
         out = self.dropout(out)
-
         out_smoother = out = self.smoother(out)
 
-        out = interpolate_and_pad(out, self.args.win_stride, seq_len)
+        # Permute logits for sequence compatibility
+        logits = out.permute(0, 2, 1)  # Shape: (batch_size, seq_len, num_classes)
 
-        out = out.permute(0, 2, 1)
+        # Apply temperature-scaled softmax
+        scaled_logits = logits / self.temperature
+        probabilities = f.softmax(scaled_logits, dim=-1)  # Compute probabilities for each class
 
         output = {
-            'predictions':out,
+            'predictions': probabilities,  # Softmax probabilities
+            # 'raw_logits': logits,  # Raw logits (useful if softmax isn't needed elsewhere)
             'out_basemodel': out_basemodel,
             'out_smoother': out_smoother,
             'max_indices': max_indices
         }
-
         return output
-
 
 def multiply_ref_panel_stack_ancestries(mixed, ref_panel):
     all_refs = [None] * len(ref_panel.keys())
