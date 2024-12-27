@@ -27,7 +27,17 @@ class SlidingWindowSum(nn.Module):
 class AncestryLevelConvSmoother(nn.Module):
     def __init__(self, kernel_size, padding, init="rand"):
         super(AncestryLevelConvSmoother, self).__init__()
-        self.conv = nn.Conv2d(1, 1, (1, kernel_size), padding=(0, padding))
+        
+        # Default kernel sizes and paddings
+        if kernel_sizes is None:
+            kernel_sizes = [25, 50, 75] # Small, medium, large
+        if paddings is None:
+            paddings = [12, 25, 37] 
+        
+        self.depthwise_convs = nn.ModuleList([
+            nn.Conv2d(1, 1, (1, ks), padding=(0, p), groups=1) for ks, p in zip(kernel_sizes, paddings)
+        ])
+        self.pointwise_conv = nn.Conv2d(len(kernel_sizes), 1, kernel_size=1)  # Combines outputs
 
         if init == "gauss_filter":
             var = 0.2
@@ -44,9 +54,10 @@ class AncestryLevelConvSmoother(nn.Module):
 
     def forward(self, inp):
         inp = inp.unsqueeze(1)
-        inp = self.conv(inp)
-        inp = inp.squeeze(1)
-        return inp
+        depthwise_outputs = [conv(inp) for conv in self.depthwise_convs]
+        stacked = torch.cat(depthwise_outputs, dim=1)  # Concatenate outputs along the channel dim
+        output = self.pointwise_conv(stacked)
+        return output.squeeze(1)
 
 
 class RefMaxPool(nn.Module):
