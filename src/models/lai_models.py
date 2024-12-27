@@ -30,9 +30,9 @@ class AncestryLevelConvSmoother(nn.Module):
         
         # Default kernel sizes and paddings
         if kernel_sizes is None:
-            kernel_sizes = [3, 5, 7]  # Small, medium, large
+            kernel_sizes = [25, 50, 75] # Small, medium, large
         if paddings is None:
-            paddings = [k // 2 for k in kernel_sizes]  # Same size output
+            paddings = [12, 25, 37] 
 
         self.convs = nn.ModuleList([
             nn.Conv2d(1, 1, (1, ks), padding=(0, p)) for ks, p in zip(kernel_sizes, paddings)
