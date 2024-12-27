@@ -134,6 +134,14 @@ class AddPoolings(nn.Module):
 
         return out
 
+class PixelShuffleUpsampler(nn.Module):
+    def __init__(self, upscale_factor):
+        super(PixelShuffleUpsampler, self).__init__()
+        self.pixel_shuffle = nn.PixelShuffle(upscale_factor)
+
+    def forward(self, inp):
+        return self.pixel_shuffle(inp)
+
 class BaseModel(nn.Module):
     def __init__(self, args):
         super(BaseModel, self).__init__()
