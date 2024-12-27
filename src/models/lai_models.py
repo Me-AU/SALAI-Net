@@ -43,10 +43,11 @@ class AncestryLevelConvSmoother(nn.Module):
             raise ValueError()
 
     def forward(self, inp):
+        raw_input = inp
         inp = inp.unsqueeze(1)
         inp = self.conv(inp)
         inp = inp.squeeze(1)
-        return inp
+        return inp + raw_input  # Add raw scores as the residual connection
 
 
 class RefMaxPool(nn.Module):
