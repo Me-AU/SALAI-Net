@@ -217,6 +217,8 @@ class AgnosticModel(nn.Module):
             print("No dropout")
             self.dropout = nn.Sequential()
 
+        self.upsampler = DeconvolutionUpsampler(in_channels=1, out_channels=1, kernel_size=4, stride=2, padding=1)
+
     def forward(self, input_mixed, ref_panel):
 
         seq_len = input_mixed.shape[-1]
@@ -231,7 +233,8 @@ class AgnosticModel(nn.Module):
 
         out_smoother = out = self.smoother(out)
 
-        out = interpolate_and_pad(out, self.args.win_stride, seq_len)
+        # out = interpolate_and_pad(out, self.args.win_stride, seq_len)
+        out = self.upsampler(out)
 
         out = out.permute(0, 2, 1)
 
