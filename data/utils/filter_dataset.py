@@ -4,34 +4,14 @@ def select_subset_of_snps(input_file, output_file, subset_size=100000):
     with open(input_file, 'r') as infile:
         snps = [line.strip() for line in infile.readlines()]
     
+    # Select the first 'subset_size' SNPs
     subset_size = min(subset_size, len(snps))  # Adjust subset size if fewer SNPs are available
-    selected_snps = random.sample(snps, subset_size)
+    selected_snps = snps[:subset_size]  # Take the first 'subset_size' SNPs
     
     with open(output_file, 'w') as outfile:
         outfile.write('\n'.join(selected_snps) + '\n')
     
     print(f"Selected {subset_size} SNPs and saved to {output_file}")
-
-def filter_vcf_by_positions(vcf_file, pos_file, output_vcf):
-    # Read positions from the position text file
-    with open(pos_file, 'r') as pos_file:
-        positions_to_include = set(line.strip() for line in pos_file.readlines())
-
-    # Open the VCF file and prepare to write the filtered output
-    with open(vcf_file, 'r') as vcf:
-        with open(output_vcf, 'w') as output:
-            # Write the header lines (lines that start with ## or #)
-            for line in vcf:
-                if line.startswith('##') or line.startswith('#'):
-                    output.write(line)
-                else:
-                    # For the data rows, check if the position is in the list of positions to include
-                    fields = line.split('\t')
-                    position = fields[1]  # VCF position is in the second column
-                    if position in positions_to_include:
-                        output.write(line)
-    
-    print(f"Filtered VCF saved to {output_vcf}")
 
 
 import csv
@@ -114,14 +94,37 @@ def filter_vcf_by_samples(input_tsv, input_vcf, output_vcf, output_tsv, n_sample
     print(f"Filtered TSV file written to {output_tsv}")
 
 
+def filter_vcf_by_positions(vcf_file, pos_file, output_vcf):
+    # Read positions from the position text file
+    with open(pos_file, 'r') as pos_file:
+        positions_to_include = set(line.strip() for line in pos_file.readlines())
+
+    # Open the VCF file and prepare to write the filtered output
+    with open(vcf_file, 'r') as vcf:
+        with open(output_vcf, 'w') as output:
+            # Write the header lines (lines that start with ## or #)
+            for line in vcf:
+                if line.startswith('##') or line.startswith('#'):
+                    output.write(line)
+                else:
+                    # For the data rows, check if the position is in the list of positions to include
+                    fields = line.split('\t')
+                    position = fields[1]  # VCF position is in the second column
+                    if position in positions_to_include:
+                        output.write(line)
+    
+    print(f"Filtered VCF saved to {output_vcf}")
+
+
+
 
 # Example usage
 # select_subset_of_snps(r'E:\GeMorph\Ancestry\SALAI-Net\data\ref.txt', 'data/final/selected_snps.txt')
 
-# filter_vcf_by_positions(r'E:\GeMorph\Ancestry\SALAI-Net\data\final\ref_panel.vcf', r'E:\GeMorph\Ancestry\SALAI-Net\data\final\selected_snps.txt', 'data/final/ref_panel_chr22.vcf')
+filter_vcf_by_positions(r'E:\GeMorph\Ancestry\SALAI-Net\ch_22_filtered.vcf', r'E:\GeMorph\Ancestry\SALAI-Net\data\final\selected_snps.txt', 'data/final/test_dataset.vcf')
 
 # filter_vcf_by_positions(r'E:\GeMorph\Ancestry\SALAI-Net\data\final\train_dataset.vcf', r'E:\GeMorph\Ancestry\SALAI-Net\data\final\selected_snps.txt', 'data/final/train.vcf')
 
-filter_vcf_by_positions(r'E:\GeMorph\Ancestry\SALAI-Net\data\final\test_dataset.vcf', r'E:\GeMorph\Ancestry\SALAI-Net\data\final\selected_snps.txt', 'data/final/test.vcf')
+# filter_vcf_by_positions(r'E:\GeMorph\Ancestry\SALAI-Net\data\final\test_dataset.vcf', r'E:\GeMorph\Ancestry\SALAI-Net\data\final\selected_snps.txt', 'data/final/test.vcf')
 
 # filter_vcf_by_samples(r'E:\GeMorph\Ancestry\SALAI-Net\data\final\ref_panel_map.tsv', r'E:\GeMorph\Ancestry\SALAI-Net\data\final\ref_panel_chr22.vcf', 'small_ref_panel_chr22.vcf', 'small_ref_panel.tsv', 100)

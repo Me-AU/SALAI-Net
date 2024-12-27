@@ -20,3 +20,7 @@ data/final_test_data
 data/final_train_data
 data/ref.txt
 data/ref_panel.tsv
+data/final
+prediction
+prediction2
+*.vcf

@@ -217,12 +217,12 @@ def select_balanced_samples(input_tsv, output_tsv, n_samples):
 # stratified_split(r'E:\GeMorph\Ancestry\SALAI-Net\data\final\dataset_samples.tsv', 'data/final/dataset_train.tsv', 'data/final/dataset_test.tsv', ratio=0.8)
 
 #generate training vcf 
-# filter_vcf_by_samples(r'E:\GeMorph\Ancestry\SALAI-Net\data\final\ref_panel.tsv', r'E:\GeMorph\Ancestry\SALAI-Net\data\ref_panel_chr22.vcf', 'data/final/ref_panel.vcf')
+# filter_vcf_by_samples(r'E:\GeMorph\Ancestry\SALAI-Net\data\final\ref_panel.tsv', r'E:\GeMorph\Ancestry\SALAI-Net\data\final\ref_panel.vcf', 'data/final/ref_panel_chr22.vcf')
 
 # filter_vcf_by_samples(r'E:\GeMorph\Ancestry\SALAI-Net\data\final\train_dataset.tsv', r'E:\GeMorph\Ancestry\SALAI-Net\data\dataset_train.vcf', 'data/final/train_dataset.vcf')
 
 # #Generate test vcf 
-filter_vcf_by_samples(r'E:\GeMorph\Ancestry\SALAI-Net\data\final\test_dataset.tsv', r'E:\GeMorph\Ancestry\SALAI-Net\data\dataset_test.vcf', 'data/final/test_dataset.vcf')
+filter_vcf_by_samples(r'E:\GeMorph\Ancestry\SALAI-Net\data\final\test_dataset.tsv', r'E:\GeMorph\Ancestry\SALAI-Net\data\final\test_dataset.vcf', 'data/final/test.vcf')
 
 #sampling for ref panel 
 # select_balanced_samples(r'E:\GeMorph\Ancestry\SALAI-Net\data\dataset_test.tsv', r'data/final/test_dataset.tsv', 200)
