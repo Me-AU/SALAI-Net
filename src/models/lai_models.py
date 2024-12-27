@@ -134,6 +134,16 @@ class AddPoolings(nn.Module):
 
         return out
 
+class ResidualUpsampler(nn.Module):
+    def __init__(self, upsampling_factor):
+        super(ResidualUpsampler, self).__init__()
+        self.upsample_factor = upsampling_factor
+
+    def forward(self, inp):
+        residual = inp
+        upsampled = f.interpolate(inp, scale_factor=self.upsample_factor, mode='linear', align_corners=True)
+        return upsampled + residual
+
 class BaseModel(nn.Module):
     def __init__(self, args):
         super(BaseModel, self).__init__()
