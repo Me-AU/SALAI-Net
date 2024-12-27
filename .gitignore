@@ -16,4 +16,7 @@ data/ch_22_filtered.vcf
 data/1kmap.tsv
 data/dataset_test.vcf
 data/dataset_train.vcf
-data/final_data
+data/final_test_data
+data/final_train_data
+data/ref.txt
+data/ref_panel.tsv
