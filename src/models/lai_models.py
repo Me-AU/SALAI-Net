@@ -134,6 +134,17 @@ class AddPoolings(nn.Module):
 
         return out
 
+class DeconvolutionUpsampler(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size, stride, padding):
+        super(DeconvolutionUpsampler, self).__init__()
+        self.deconv = nn.ConvTranspose2d(
+            in_channels, out_channels, kernel_size=kernel_size, stride=stride, padding=padding
+        )
+
+    def forward(self, inp):
+        inp = inp.unsqueeze(1)  # Add batch dimension if not present
+        return self.deconv(inp).squeeze(1)  # Remove batch dimension after output
+
 class BaseModel(nn.Module):
     def __init__(self, args):
         super(BaseModel, self).__init__()
