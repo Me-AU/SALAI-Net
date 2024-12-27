@@ -25,10 +25,20 @@ class SlidingWindowSum(nn.Module):
         return inp
 
 class AncestryLevelConvSmoother(nn.Module):
-    def __init__(self, kernel_size, padding, init="rand"):
+    def __init__(self, kernel_size, padding, out_channels=1, init="rand"):
         super(AncestryLevelConvSmoother, self).__init__()
-        self.conv = nn.Conv2d(1, 1, (1, kernel_size), padding=(0, padding))
-
+        
+        # Default kernel sizes and paddings
+        if kernel_sizes is None:
+            kernel_sizes = [3, 5, 7]  # Small, medium, large
+        if paddings is None:
+            paddings = [k // 2 for k in kernel_sizes]  # Same size output
+        
+        self.convs = nn.ModuleList([
+            nn.Conv2d(1, out_channels, (1, k), padding=(0, p)) 
+            for k, p in zip(kernel_sizes, paddings)
+        ])
+        self.final_conv = nn.Conv1d(len(kernel_sizes), 1, kernel_size=1)
         if init == "gauss_filter":
             var = 0.2
             x = np.arange(kernel_size) / kernel_size - 0.5
@@ -44,9 +54,11 @@ class AncestryLevelConvSmoother(nn.Module):
 
     def forward(self, inp):
         inp = inp.unsqueeze(1)
-        inp = self.conv(inp)
-        inp = inp.squeeze(1)
-        return inp
+        out = [conv(inp) for conv in self.convs]
+        out = torch.cat(out, dim=1)  # Concatenate along the channel dimension
+        out = out.squeeze(1).permute(0, 2, 1)  # Prepare for 1D convolution
+        out = self.final_conv(out).permute(0, 2, 1)  # Back to original shape
+        return out
 
 
 class RefMaxPool(nn.Module):
