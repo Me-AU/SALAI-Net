@@ -130,7 +130,8 @@ def train(model, train_loader, valid_loader, args):
         init_epoch, best_val_loss, start_time = progress_saver.get_resume_stats()
 
         init_time = time.time() - start_time
-        model.load_state_dict(torch.load(args.exp + "/models/last_model.pth"))
+        #model.load_state_dict(torch.load(args.exp + "/models/last_model.pth"))
+        model.load_state_dict(torch.load(args.exp + "/models/best_model.pth"))
         optimizer.load_state_dict(
             torch.load(args.exp + "/models/last_optim.pth"))
         for state in optimizer.state.values():
@@ -187,6 +188,7 @@ def train(model, train_loader, valid_loader, args):
 
         # Calculate training accuracy
         train_accuracy = correct_predictions / total_samples
+        print("train_accuracy",train_accuracy)
 
         # Validate the model after each epoch
         val_acc, val_loss = validate(model, valid_loader, criterion, args)
@@ -207,18 +209,19 @@ def train(model, train_loader, valid_loader, args):
         epoch_data = {
             "epoch": n,
             "train_loss": train_loss,
-            "train_accuracy": train_accuracy,  # Add train_accuracy to the epoch data
             "val_loss": val_loss,
-            "val_acc": val_acc.cpu(),
+            "val_acc": val_acc,
             "best_epoch": best_epoch,
             "best_val_loss": best_val_loss,
             "time": total_time,
             "lr": lr
         }
 
+        print(epoch_data)
+
         progress_saver.update_epoch_progess(epoch_data)
 
-        print(f"epoch #{n}: Train accuracy: {train_accuracy:.4f}, Val acc: {val_acc.item():.4f}, time: {time.time() - init_time:.2f}s")
+        print(f"epoch #{n}: Train accuracy: {train_accuracy:.4f}, Val acc: {val_acc:.4f}, time: {time.time() - init_time:.2f}s")
 
 
 # def validate(model, val_loader, criterion, args):
