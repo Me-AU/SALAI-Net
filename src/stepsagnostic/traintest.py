@@ -131,9 +131,27 @@ def train(model, train_loader, valid_loader, args):
 
         init_time = time.time() - start_time
         #model.load_state_dict(torch.load(args.exp + "/models/last_model.pth"))
-        model.load_state_dict(torch.load(args.exp + "/models/best_model.pth"))
-        optimizer.load_state_dict(
-            torch.load(args.exp + "/models/last_optim.pth"))
+        state_dict = torch.load(args.exp + "/models/best_model.pth") 
+        model_state_dict = model.state_dict()
+        filtered_state_dict = {k: v for k, v in state_dict.items() if k in model_state_dict}
+
+        model_state_dict.update(filtered_state_dict)  # Update the model's state_dict with the loaded weights
+        model.load_state_dict(model_state_dict)  # Load the updated state_dict into the model
+
+        # model.load_state_dict(torch.load(args.exp + "/models/best_model.pth"))
+        optim = torch.load(args.exp + "/models/last_optim.pth")
+
+        try:
+            # Load the optimizer's state dictionary if possible
+            optimizer.load_state_dict(optim)
+            print("Optimizer state loaded successfully.")
+        except ValueError as e:
+            print(f"Error loading optimizer state: {e}")
+            # Handle this error by reinitializing the optimizer from scratch
+            optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+            print("Reinitialized optimizer with new parameters.")
+
+        # Move optimizer states to the correct device (if necessary)
         for state in optimizer.state.values():
             for k, v in state.items():
                 if isinstance(v, torch.Tensor):

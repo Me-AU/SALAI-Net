@@ -25,7 +25,7 @@ class SlidingWindowSum(nn.Module):
         return inp
 
 class AncestryLevelConvSmoother(nn.Module):
-    def __init__(self, kernel_size, padding, init="rand"):
+    def __init__(self, kernel_size, padding, init="rand",kernel_sizes=None,paddings=None):
         super(AncestryLevelConvSmoother, self).__init__()
         
         # Default kernel sizes and paddings
@@ -55,7 +55,13 @@ class AncestryLevelConvSmoother(nn.Module):
     def forward(self, inp):
         inp = inp.unsqueeze(1)
         outputs = [conv(inp) for conv in self.convs]
-        stacked = torch.stack(outputs, dim=-1)  # Stack outputs along a new dimension
+
+        # Find the maximum size in the last dimension
+        max_size = max([output.shape[-1] for output in outputs])
+        # Pad each tensor to the max size in the last dimension
+        padded_outputs = [f.pad(output, (0, max_size - output.shape[-1])) for output in outputs]
+    
+        stacked = torch.stack(padded_outputs, dim=-1)  # Stack outputs along a new dimension
         attention_weights = torch.softmax(self.attention(torch.ones(stacked.shape[-1]).to(inp.device)), dim=-1)
         weighted_output = torch.sum(stacked * attention_weights, dim=-1)  # Weighted sum
         return weighted_output.squeeze(1)
