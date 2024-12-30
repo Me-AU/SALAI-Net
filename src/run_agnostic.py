@@ -13,7 +13,7 @@ from stepsagnostic import build_transforms
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument("--exp", type=str, default="models/main_model")
+parser.add_argument("--exp", type=str, default="exp2_depthwise")
 
 parser.add_argument("--train-mixed", type=str, default="data/final_train_data/train_vcf_and_labels.h5")
 parser.add_argument("--valid-mixed", type=str, default="data/final_test_data/test_vcf_and_labels.h5")
@@ -84,12 +84,12 @@ if __name__ == '__main__':
     if 'query' not in args:
         args.query = False
     
-    args.exp = "models/main_model"
-    args.train_mixed = "data/final_train_data/train_vcf_and_labels.h5"
-    args.valid_mixed = "data/final_test_data/test_vcf_and_labels.h5"
-    args.train_ref_panel = "data/final_test_data/test_vcf_and_labels.h5"
-    args.valid_ref_panel = "data/final_train_data/train_vcf_and_labels.h5"
-    args.num_epochs = 50
+    # args.exp = "models/main_model"
+    # args.train_mixed = "data/final_train_data/train_vcf_and_labels.h5"
+    # args.valid_mixed = "data/final_test_data/test_vcf_and_labels.h5"
+    # args.train_ref_panel = "data/final_test_data/test_vcf_and_labels.h5"
+    # args.valid_ref_panel = "data/final_train_data/train_vcf_and_labels.h5"
+    # args.num_epochs = 50
 
 
 
