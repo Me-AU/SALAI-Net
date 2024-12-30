@@ -13,12 +13,12 @@ from stepsagnostic import build_transforms
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument("--exp", type=str, default="exp/default_exp")
+parser.add_argument("--exp", type=str, default="models/main_model")
 
-parser.add_argument("--train-mixed", type=str, default="data/benet_generations/4classes/chm22/train1_128gen20/vcf_and_labels.h5")
-parser.add_argument("--valid-mixed", type=str, default="data/benet_generations/4classes/chm22/val_128gen5/vcf_and_labels.h5")
-parser.add_argument("--train-ref-panel", type=str, default="data/benet_generations/4classes/chm22/train2_0gen/vcf_and_labels.h5")
-parser.add_argument("--valid-ref-panel", type=str, default="data/benet_generations/4classes/chm22/train2_0gen/vcf_and_labels.h5")
+parser.add_argument("--train-mixed", type=str, default="data/final_train_data/train_vcf_and_labels.h5")
+parser.add_argument("--valid-mixed", type=str, default="data/final_test_data/test_vcf_and_labels.h5")
+parser.add_argument("--train-ref-panel", type=str, default="data/final_test_data/test_vcf_and_labels.h5")
+parser.add_argument("--valid-ref-panel", type=str, default="data/final_train_data/train_vcf_and_labels.h5")
 
 parser.add_argument("--query", '-q', default=False)
 parser.add_argument("--reference", '-r', default=False)
@@ -33,7 +33,7 @@ parser.add_argument("--map", '-m', default=False)
 #                     default="VanillaConvNet")
 #                     default="VanillaConvNet")
 
-parser.add_argument("--num-epochs", type=int, default=99999999)
+parser.add_argument("--num-epochs", type=int, default=20)
 parser.add_argument("-b", "--batch-size", type=int, default=32)
 parser.add_argument("--lr", type=float, default=0.01)
 parser.add_argument("--lr-decay", type=int, default=-1)
@@ -76,6 +76,22 @@ if __name__ == '__main__':
             args = pickle.load(f)
             args.resume = True
     print(args)
+
+    if 'reference' not in args:
+        args.reference = False
+    if 'map' not in args:
+        args.map = False
+    if 'query' not in args:
+        args.query = False
+    
+    args.exp = "models/main_model"
+    args.train_mixed = "data/final_train_data/train_vcf_and_labels.h5"
+    args.valid_mixed = "data/final_test_data/test_vcf_and_labels.h5"
+    args.train_ref_panel = "data/final_test_data/test_vcf_and_labels.h5"
+    args.valid_ref_panel = "data/final_train_data/train_vcf_and_labels.h5"
+    args.num_epochs = 50
+
+
 
     model = AgnosticModel(args)
 
