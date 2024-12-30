@@ -25,9 +25,8 @@ class SlidingWindowSum(nn.Module):
         return inp
 
 class AncestryLevelConvSmoother(nn.Module):
-    def __init__(self, kernel_size, padding, out_channels=1, init="rand"):
-        super(AncestryLevelConvSmoother, self).__init__()
-        
+    def __init__(self, kernel_size, padding, out_channels=1, init="rand",kernel_sizes = None,paddings = None):
+        super(AncestryLevelConvSmoother, self).__init__()      
         # Default kernel sizes and paddings
         if kernel_sizes is None:
             kernel_sizes = [3, 5, 7]  # Small, medium, large
@@ -55,9 +54,16 @@ class AncestryLevelConvSmoother(nn.Module):
     def forward(self, inp):
         inp = inp.unsqueeze(1)
         out = [conv(inp) for conv in self.convs]
-        out = torch.cat(out, dim=1)  # Concatenate along the channel dimension
-        out = out.squeeze(1).permute(0, 2, 1)  # Prepare for 1D convolution
-        out = self.final_conv(out).permute(0, 2, 1)  # Back to original shape
+        out = torch.cat(out, dim=1)  # Concatenate along the channel dimension 
+        # out = out.squeeze(1).permute(0, 2, 1)  # Prepare for 1D convolution
+        out = out.permute(0, 2, 3, 1)  # [batch_size, height, width, channels] --> [batch_size, height, width, num_convs * out_channels]
+
+        # Now apply the 1D convolution
+        out = out.reshape(out.size(0), out.size(3), -1)  # [batch_size, num_channels, flattened_spatial_dim]
+        out = self.final_conv(out).permute(0, 2, 1)  # [batch_size, length, channels]
+
+
+        #out = self.final_conv(out).permute(0, 2, 1)  # Back to original shape
         return out
 
 

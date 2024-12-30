@@ -90,6 +90,7 @@ if __name__ == '__main__':
     args.train_ref_panel = "data/final_test_data/test_vcf_and_labels.h5"
     args.valid_ref_panel = "data/final_train_data/train_vcf_and_labels.h5"
     args.num_epochs = 50
+    args.batch_size = 8
 
 
 
